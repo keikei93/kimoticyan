@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>きもちちゃん</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { height: 100%; }
+  body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background: #FFF8E7;
+    /* スクロール完全禁止 */
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
+  #title {
+    position: fixed;
+    top: 1.2rem;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 1.1rem;
+    color: #C89A10;
+    letter-spacing: 0.2em;
+    opacity: 0.7;
+    z-index: 10;
+  }
+
+  #chara-wrap {
+    position: fixed;
+    /* JSで top を上書きするが初期値はここ */
+    top: 13%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 160px;
+    z-index: 10;
+    /* キーボード出現時のアニメーション */
+    transition: top 0.25s ease;
+  }
+  #chara-wrap svg {
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 4px 12px rgba(230,184,0,0.25));
+  }
+  #chara-wrap svg.bounce { animation: bounce 0.4s ease; }
+  @keyframes bounce {
+    0%   { transform: translateY(0); }
+    30%  { transform: translateY(-10px); }
+    60%  { transform: translateY(-4px); }
+    100% { transform: translateY(0); }
+  }
+
+  #speech-bubble {
+    position: fixed;
+    /* JSで top を上書き */
+    top: calc(13% + 172px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 2px solid #E6B800;
+    border-radius: 18px;
+    padding: 0.8rem 1.2rem;
+    width: 280px;
+    min-height: 52px;
+    font-size: 0.95rem;
+    color: #3a3a2a;
+    line-height: 1.6;
+    text-align: center;
+    z-index: 10;
+    transition: opacity 0.3s ease, top 0.25s ease;
+  }
+  #speech-bubble::before {
+    content: '';
+    position: absolute;
+    top: -14px; left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-bottom-color: #E6B800;
+  }
+  #speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: white;
+  }
+
+  #bottom-area {
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    padding: 0.8rem 1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    background: #FFF8E7;
+    z-index: 20;
+    /* JSで bottom を上書き */
+    transition: bottom 0.25s ease;
+  }
+
+  #input-area { display: flex; gap: 0.5rem; width: 100%; max-width: 340px; }
+
+  #user-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 1rem;
+    border: 2px solid #E6B800;
+    border-radius: 999px;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 16px;
+    background: white;
+    color: #3a3a2a;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #user-input:focus { border-color: #C89A10; }
+
+  #send-btn {
+    width: 44px; height: 44px;
+    min-width: 44px;
+    border-radius: 50%; border: none;
+    background: #FFD966; cursor: pointer;
+    font-size: 1.2rem;
+    transition: background 0.2s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #send-btn:hover { background: #E6B800; }
+  #send-btn:active { transform: scale(0.92); }
+
+  #voice-toggle {
+    background: none;
+    border: 1.5px solid #E6B800;
+    border-radius: 999px;
+    padding: 0.3rem 1rem;
+    font-family: 'Zen Maru Gothic', sans-serif;
+    font-size: 0.8rem;
+    color: #C89A10;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: background 0.2s, opacity 0.2s;
+  }
+  #voice-toggle:hover { background: #FFF0B0; opacity: 1; }
+  #voice-toggle.muted { opacity: 0.4; }
+</style>
+</head>
+<body>
+
+<div id="title">きもちちゃん</div>
+<div id="chara-wrap">
+  <svg id="chara-svg" viewBox="0 0 116 120" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+<div id="speech-bubble">はじめまして！なんでも話しかけてね。</div>
+<div id="bottom-area">
+  <div id="input-area">
+    <input type="text" id="user-input" placeholder="メッセージを入力…" maxlength="100">
+    <button id="send-btn">➤</button>
+  </div>
+  <button id="voice-toggle">🔊 音声オン</button>
+</div>
+
+<script>
+// ── visualViewport でキーボード高さを検知して顔・入力欄を動かす ──
+const charaWrap = document.getElementById('chara-wrap');
+const bubbleEl  = document.getElementById('speech-bubble');
+const bottomEl  = document.getElementById('bottom-area');
+
+function onViewportResize() {
+  const vv = window.visualViewport;
+  if (!vv) return;
+
+  // キーボード高さ = ウィンドウ高さ - visualViewport高さ - visualViewport上端オフセット
+  const kbHeight = window.innerHeight - vv.height - vv.offsetTop;
+
+  // 入力エリアをキーボードの上に移動
+  bottomEl.style.bottom = Math.max(0, kbHeight) + 'px';
+
+  // キーボードが出ているとき（kbHeight > 100px）は顔を上に寄せる
+  if (kbHeight > 100) {
+    charaWrap.style.top = '6%';
+    bubbleEl.style.display = 'none'; // 吹き出しは隠して顔のスペースを確保
+  } else {
+    charaWrap.style.top = '13%';
+    bubbleEl.style.display = '';
+    bubbleEl.style.top = 'calc(13% + 172px)';
+  }
+}
+
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', onViewportResize);
+  window.visualViewport.addEventListener('scroll', onViewportResize);
+}
+
+// ── 音声設定（パターンB：rate 1.0 / pitch 1.6）──
+let voiceEnabled = true;
+
+function speak(text) {
+  if (!voiceEnabled) return;
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ja-JP';
+  utter.rate = 1.0;
+  utter.pitch = 1.6;
+  window.speechSynthesis.speak(utter);
+}
+
+const voiceBtn = document.getElementById('voice-toggle');
+voiceBtn.addEventListener('click', () => {
+  voiceEnabled = !voiceEnabled;
+  voiceBtn.textContent = voiceEnabled ? '🔊 音声オン' : '🔇 音声オフ';
+  voiceBtn.classList.toggle('muted', !voiceEnabled);
+  if (!voiceEnabled) window.speechSynthesis.cancel();
+});
+
+// ── 表情定義 ──
+const FACES = {
+  normal: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#FFD966" stroke="#E6B800" stroke-width="2"/>
+    <circle cx="32" cy="52" r="13" fill="#2C2C2A"/>
+    <circle cx="84" cy="52" r="13" fill="#2C2C2A"/>
+    <circle cx="37" cy="47" r="4" fill="white"/>
+    <circle cx="89" cy="47" r="4" fill="white"/>
+    <ellipse cx="18" cy="72" rx="12" ry="7" fill="#F4A0A0" opacity="0.55"/>
+    <ellipse cx="98" cy="72" rx="12" ry="7" fill="#F4A0A0" opacity="0.55"/>
+    <path d="M44 82 Q50 90 54 84 Q58 82 62 84 Q66 90 72 82" fill="none" stroke="#2C2C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  `; }},
+  happy: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#FFD966" stroke="#E6B800" stroke-width="2"/>
+    <path d="M20 50 Q32 36 44 50" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M72 50 Q84 36 96 50" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="18" cy="72" rx="14" ry="9" fill="#F4A0A0" opacity="0.7"/>
+    <ellipse cx="98" cy="72" rx="14" ry="9" fill="#F4A0A0" opacity="0.7"/>
+    <path d="M42 78 L58 98 L74 78 Z" fill="#C8602A" stroke="#2C2C2A" stroke-width="2" stroke-linejoin="round"/>
+  `; }},
+  shy: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#FFD966" stroke="#E6B800" stroke-width="2"/>
+    <path d="M22 30 L42 20" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M74 20 L94 30" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="52" r="13" fill="#2C2C2A"/>
+    <circle cx="84" cy="52" r="13" fill="#2C2C2A"/>
+    <circle cx="37" cy="47" r="4" fill="white"/>
+    <circle cx="89" cy="47" r="4" fill="white"/>
+    <ellipse cx="16" cy="72" rx="18" ry="12" fill="#F4A0A0" opacity="0.85"/>
+    <ellipse cx="100" cy="72" rx="18" ry="12" fill="#F4A0A0" opacity="0.85"/>
+    <path d="M44 84 Q50 92 54 86 Q58 84 62 86 Q66 92 72 84" fill="none" stroke="#2C2C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  `; }},
+  troubled: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#FFD966" stroke="#E6B800" stroke-width="2"/>
+    <path d="M22 30 L42 20" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <path d="M74 20 L94 30" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="54" r="13" fill="#2C2C2A"/>
+    <circle cx="84" cy="54" r="13" fill="#2C2C2A"/>
+    <circle cx="37" cy="49" r="4" fill="white"/>
+    <circle cx="89" cy="49" r="4" fill="white"/>
+    <path d="M44 88 Q58 76 72 88" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+  `; }},
+  sleepy: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#FFD966" stroke="#E6B800" stroke-width="2"/>
+    <ellipse cx="32" cy="52" rx="12" ry="14" fill="#2C2C2A"/>
+    <ellipse cx="84" cy="52" rx="12" ry="14" fill="#2C2C2A"/>
+    <rect x="20" y="38" width="24" height="14" fill="#FFD966"/>
+    <rect x="72" y="38" width="24" height="14" fill="#FFD966"/>
+    <ellipse cx="18" cy="72" rx="10" ry="6" fill="#F4A0A0" opacity="0.25"/>
+    <ellipse cx="98" cy="72" rx="10" ry="6" fill="#F4A0A0" opacity="0.25"/>
+    <path d="M44 84 Q50 92 54 86 Q58 84 62 86 Q66 92 72 84" fill="none" stroke="#2C2C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="100" y="24" font-family="sans-serif" font-size="15" fill="#B4B2A9">z z</text>
+  `; }},
+  angry: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#FFD966" stroke="#E6B800" stroke-width="2"/>
+    <path d="M22 24 L42 32" fill="none" stroke="#2C2C2A" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M74 32 L94 24" fill="none" stroke="#2C2C2A" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="32" cy="54" r="13" fill="#2C2C2A"/>
+    <circle cx="84" cy="54" r="13" fill="#2C2C2A"/>
+    <circle cx="37" cy="49" r="4" fill="white"/>
+    <circle cx="89" cy="49" r="4" fill="white"/>
+    <path d="M44 84 Q58 74 72 84" fill="none" stroke="#2C2C2A" stroke-width="3" stroke-linecap="round"/>
+    <g transform="translate(90, 8)">
+      <polygon points="0,-14 5,-7 0,0 -5,-7" fill="#E24B4A"/>
+      <polygon points="0,0 5,7 0,14 -5,7" fill="#E24B4A"/>
+      <polygon points="-14,0 -7,-5 0,0 -7,5" fill="#E24B4A"/>
+      <polygon points="0,0 7,-5 14,0 7,5" fill="#E24B4A"/>
+      <circle cx="0" cy="0" r="3" fill="#FFD966"/>
+    </g>
+  `; }},
+  blank: { render(g) { g.innerHTML = `
+    <rect x="0" y="0" width="116" height="120" rx="40" fill="#E8E8E0" stroke="#B4B2A9" stroke-width="2"/>
+    <path d="M22 24 L42 32" fill="none" stroke="#2C2C2A" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M74 32 L94 24" fill="none" stroke="#2C2C2A" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="32" cy="52" rx="13" ry="13" fill="white" stroke="#2C2C2A" stroke-width="2"/>
+    <ellipse cx="84" cy="52" rx="13" ry="13" fill="white" stroke="#2C2C2A" stroke-width="2"/>
+    <path d="M44 82 Q50 90 54 84 Q58 82 62 84 Q66 90 72 82" fill="none" stroke="#2C2C2A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <ellipse cx="104" cy="42" rx="4" ry="6" fill="#B4B2A9" opacity="0.6"/>
+  `; }}
+};
+
+const RESPONSES = [
+  { keywords: ['疲れ','つかれ','しんど','きつい','だるい','へとへと','くたくた'], emotion: 'troubled', phrases: ['ちょっと休んで…？','お疲れ様…！ゆっくりしてね。','無理しないでね。','そっか…がんばってたんだね。','お茶でも飲んで休もう？','たまには何もしない日もいいよ。','ゆっくり深呼吸してみて。'] },
+  { keywords: ['うれし','嬉し','やった','よかっ','さいこう','最高','やったー','ラッキー'], emotion: 'happy', phrases: ['わーい！よかったね！','やったー！！','それは嬉しいね！','わたしまで嬉しくなっちゃった！','すごいすごい！！','いいことあったんだね〜！','やったじゃん！！'] },
+  { keywords: ['ありがと','ありがとう','サンキュ','さんきゅ','thanks'], emotion: 'shy', phrases: ['え…そんな…！えへへ。','あ、どういたしまして！','よ、よかったよ…！','そんなこと言われたら照れちゃう…！','うう…なんか嬉しい…。','こちらこそ！','そ、そう…？えへへ。'] },
+  { keywords: ['おはよ','おはようございます'], emotion: 'happy', phrases: ['おはよー！今日もいい日にしよ！','おはよう！ゆっくり起きてね。','おはよ〜！よく眠れた？','おはよう！今日も一緒にがんばろ！','おはようございます！いい朝だね。','おはよ！今日もよろしくね！'] },
+  { keywords: ['こんにちは','こんにちわ','やあ','ねえ','ねー','はろ','hello','hi'], emotion: 'normal', phrases: ['こんにちは！どうしたの？','やあ！元気？','なあに？','なんでも聞いてね！','どうぞ話しかけて！','こんにちは〜！','なにかあった？'] },
+  { keywords: ['おやすみ','ねる','寝る','おやすみなさい','もう寝'], emotion: 'sleepy', phrases: ['おやすみ…zzz','ゆっくり休んでね…','またね…zzz','おやすみなさい…いい夢見てね。','ゆっくりね…おやすみ…','また明日ね…zzz','ゆっくりおやすみ…。'] },
+  { keywords: ['むかつく','イライラ','いらいら','うざ','きらい','ムカつく','ひどい'], emotion: 'angry', phrases: ['わかる！むかつくよね！！','それはひどい…！','もー！なんなの！','ぷんぷん！許せないよそれ！','いっしょに怒ってあげる！！','そういう人いるよね…最悪だ！','それはないよ、ほんとに！'] },
+  { keywords: ['わからん','わからない','むずかし','難しい','どうして','なぜ','なんで','意味わからん'], emotion: 'blank', phrases: ['え…わたしも…よくわかんない…','むずかしいねえ…','うーん…？','それはむずかしい問題だ…','いっしょに考えよ…？','なんでだろうね…うーん。','むずかしいよね…。'] },
+  { keywords: ['こわい','怖い','こわ','びっくり','おどろ','やばい','ヤバい'], emotion: 'blank', phrases: ['えっ…こわっ…！','びっくりしたー！！','ど、どうしよう…','それはこわいね…！','だ、大丈夫…？','きゃっ…！','え、えっ…！？'] },
+  { keywords: ['すき','好き','だいすき','大好き','すてき','素敵'], emotion: 'shy', phrases: ['え…っ！あ、ありがとう…！','そ、そんなこと言われたら…えへ。','わたしも…す、すきだよ！','うわあ…どうしよ、嬉しい…！','そんなふうに思ってくれてたの…！？','えへへ…ありがとう…。','も、もう…！えへへ。'] },
+  { keywords: ['かわいい','かわいく','可愛い'], emotion: 'shy', phrases: ['え…っ、か、かわいい…？えへへ。','そんなこと言ってくれるの…！？','うわ、うれしい…！','照れるじゃん…！','あ、ありがとう…！','えへ…ありがとう！'] },
+  { keywords: ['たのし','楽し','わくわく','たのしみ','楽しみ','うきうき'], emotion: 'happy', phrases: ['わあ、たのしそう！','いいね！わたしもわくわくしてきた！','それはたのしみだね〜！','きゃー！いいなあ！','うきうきするね！','たのしいのが一番だよ！','わたしもいっしょにわくわくしてる！'] },
+  { keywords: ['さみし','寂し','ひとり','一人','だれもいない'], emotion: 'troubled', phrases: ['ここにいるよ！','さみしいね…そばにいるよ。','ひとりじゃないよ！','いつでも話しかけてね。','わたしがいるから大丈夫だよ。','そっか…話しかけてくれてよかった。','ずっとそばにいるよ。'] },
+  { keywords: ['おなかすい','おなか空い','はら減っ','腹減','はらへっ','ごはん','ご飯','たべたい'], emotion: 'happy', phrases: ['おなかすいたね！なにたべよ？','ごはんの時間だ〜！','おいしいもの食べてね！','なに食べる？','おなかすいたらエネルギーチャージしなきゃ！','いっぱい食べてね〜！','おいしいごはん食べてきて！'] },
+  { keywords: ['がんば','頑張','ファイト','おうえん','応援'], emotion: 'happy', phrases: ['いっしょにがんばろ！','ファイト〜！！','応援してるよ！','できるできる！！','わたしも一緒だよ！','絶対大丈夫！','がんばれ〜！！'] }
+];
+
+const DEFAULT_RESPONSES = {
+  emotion: 'normal',
+  phrases: ['そうなんだ！','うんうん。','なるほど〜！','もっと聞かせて！','ふむふむ。','そっかあ。','へえ〜！','それでそれで？','うん、聞いてるよ。','そういうこともあるよね。','ほんとに？','そっかそっか。']
+};
+
+const svg   = document.getElementById('chara-svg');
+const bubble = document.getElementById('speech-bubble');
+const input  = document.getElementById('user-input');
+const btn    = document.getElementById('send-btn');
+
+function setFace(key) {
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  FACES[key].render(g);
+  svg.innerHTML = '';
+  svg.appendChild(g);
+}
+
+function bounce() {
+  svg.classList.remove('bounce');
+  void svg.offsetWidth;
+  svg.classList.add('bounce');
+  svg.addEventListener('animationend', () => svg.classList.remove('bounce'), { once: true });
+}
+
+function getResponse(text) {
+  for (const rule of RESPONSES) {
+    if (rule.keywords.some(k => text.includes(k))) return rule;
+  }
+  return DEFAULT_RESPONSES;
+}
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function reply(text) {
+  if (!text.trim()) return;
+  const res = getResponse(text);
+  const phrase = pick(res.phrases);
+  setFace(res.emotion);
+  bounce();
+  bubble.style.opacity = '0';
+  setTimeout(() => {
+    bubble.textContent = phrase;
+    bubble.style.opacity = '1';
+    speak(phrase);
+  }, 200);
+}
+
+btn.addEventListener('click', () => { reply(input.value); input.value = ''; input.focus(); });
+input.addEventListener('keydown', e => { if (e.key === 'Enter') { reply(input.value); input.value = ''; } });
+
+setFace('normal');
+</script>
+</body>
+</html>
