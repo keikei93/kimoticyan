@@ -5,184 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>きもちちゃん</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+@import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap');
 
-  html { height: 100%; }
-  body {
-    font-family: 'Zen Maru Gothic', sans-serif;
-    background: #FFF8E7;
-    height: 100%;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
-  }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: 'Zen Maru Gothic', sans-serif;
+  background: #FFF8E7;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
 
-  #title {
-    position: fixed;
-    top: 1.2rem;
-    left: 0; right: 0;
-    text-align: center;
-    font-size: 1.1rem;
-    color: #C89A10;
-    letter-spacing: 0.2em;
-    opacity: 0.7;
-    z-index: 10;
-  }
+#title {
+  position: fixed;
+  top: 1.2rem;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  color: #C89A10;
+  letter-spacing: 0.2em;
+  opacity: 0.7;
+  z-index: 10;
+}
 
-  #chara-wrap {
-    position: fixed;
-    top: 13%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 160px;
-    height: 160px;
-    z-index: 10;
-    transition: top 0.25s ease;
-  }
-  #chara-wrap svg {
-    width: 100%; height: 100%;
-    filter: drop-shadow(0 4px 12px rgba(230,184,0,0.25));
-  }
-  #chara-wrap svg.bounce { animation: bounce 0.4s ease; }
-  @keyframes bounce {
-    0%   { transform: translateY(0); }
-    30%  { transform: translateY(-10px); }
-    60%  { transform: translateY(-4px); }
-    100% { transform: translateY(0); }
-  }
+#chara-wrap {
+  position: fixed;
+  top: 13%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 160px;
+  z-index: 10;
+  transition: top 0.25s ease;
+}
+#chara-wrap svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(230,184,0,0.25));
+}
+#chara-wrap svg.bounce { animation: bounce 0.4s ease; }
+@keyframes bounce {
+  0%   { transform: translateY(0); }
+  30%  { transform: translateY(-10px); }
+  60%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
 
-  #speech-bubble {
-    position: fixed;
-    top: calc(13% + 172px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border: 2px solid #E6B800;
-    border-radius: 18px;
-    padding: 0.8rem 1.2rem;
-    width: 280px;
-    min-height: 52px;
-    font-size: 0.95rem;
-    color: #3a3a2a;
-    line-height: 1.6;
-    text-align: center;
-    z-index: 10;
-    transition: opacity 0.3s ease, top 0.25s ease;
-  }
-  #speech-bubble::before {
-    content: '';
-    position: absolute;
-    top: -14px; left: 50%;
-    transform: translateX(-50%);
-    border: 7px solid transparent;
-    border-bottom-color: #E6B800;
-  }
-  #speech-bubble::after {
-    content: '';
-    position: absolute;
-    top: -10px; left: 50%;
-    transform: translateX(-50%);
-    border: 6px solid transparent;
-    border-bottom-color: white;
-  }
+#speech-bubble {
+  position: fixed;
+  top: calc(13% + 172px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 2px solid #E6B800;
+  border-radius: 18px;
+  padding: 0.8rem 1.2rem;
+  width: 280px;
+  min-height: 52px;
+  font-size: 0.95rem;
+  color: #3a3a2a;
+  line-height: 1.6;
+  text-align: center;
+  z-index: 10;
+  transition: opacity 0.3s ease, top 0.25s ease;
+}
+#speech-bubble::before {
+  content: '';
+  position: absolute;
+  top: -14px; left: 50%;
+  transform: translateX(-50%);
+  border: 7px solid transparent;
+  border-bottom-color: #E6B800;
+}
+#speech-bubble::after {
+  content: '';
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: white;
+}
 
-  /* ── 共通 bottom-area ── */
-  #bottom-area {
-    position: fixed;
-    bottom: 0;
-    left: 0; right: 0;
-    padding: 0.8rem 1rem 1.4rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    background: #FFF8E7;
-    z-index: 20;
-    transition: bottom 0.25s ease;
-  }
+/* ── 共通 bottom-area ── */
+#bottom-area {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  padding: 0.8rem 1rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: #FFF8E7;
+  z-index: 20;
+  transition: bottom 0.25s ease;
+}
 
-  /* ── PC：テキスト入力 ── */
-  #input-area { display: flex; gap: 0.5rem; width: 100%; max-width: 340px; }
+/* ── PC：テキスト入力 ── */
+#input-area { display: flex; gap: 0.5rem; width: 100%; max-width: 340px; }
+#user-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.6rem 1rem;
+  border: 2px solid #E6B800;
+  border-radius: 999px;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 16px;
+  background: white;
+  color: #3a3a2a;
+  outline: none;
+  transition: border-color 0.2s;
+}
+#user-input:focus { border-color: #C89A10; }
+#send-btn {
+  width: 44px; height: 44px;
+  min-width: 44px;
+  border-radius: 50%; border: none;
+  background: #FFD966; cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s, transform 0.1s;
+  display: flex; align-items: center; justify-content: center;
+}
+#send-btn:hover { background: #E6B800; }
+#send-btn:active { transform: scale(0.92); }
 
-  #user-input {
-    flex: 1;
-    min-width: 0;
-    padding: 0.6rem 1rem;
-    border: 2px solid #E6B800;
-    border-radius: 999px;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: 16px;
-    background: white;
-    color: #3a3a2a;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  #user-input:focus { border-color: #C89A10; }
+/* ── iPhone：ボタン選択 ── */
+#btn-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 340px;
+}
+.mood-btn {
+  padding: 0.55rem 0.3rem;
+  border: 2px solid #E6B800;
+  border-radius: 12px;
+  background: white;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.78rem;
+  color: #3a3a2a;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.4;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.mood-btn:active {
+  background: #FFF0B0;
+  transform: scale(0.95);
+}
 
-  #send-btn {
-    width: 44px; height: 44px;
-    min-width: 44px;
-    border-radius: 50%; border: none;
-    background: #FFD966; cursor: pointer;
-    font-size: 1.2rem;
-    transition: background 0.2s, transform 0.1s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  #send-btn:hover { background: #E6B800; }
-  #send-btn:active { transform: scale(0.92); }
-
-  /* ── iPhone：ボタン選択 ── */
-  #btn-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 340px;
-  }
-
-  .mood-btn {
-    padding: 0.55rem 0.3rem;
-    border: 2px solid #E6B800;
-    border-radius: 12px;
-    background: white;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: 0.78rem;
-    color: #3a3a2a;
-    cursor: pointer;
-    text-align: center;
-    line-height: 1.4;
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .mood-btn:active {
-    background: #FFF0B0;
-    transform: scale(0.95);
-  }
-
-  /* ── 音声ボタン（共通） ── */
-  #voice-toggle {
-    background: none;
-    border: 1.5px solid #E6B800;
-    border-radius: 999px;
-    padding: 0.3rem 1rem;
-    font-family: 'Zen Maru Gothic', sans-serif;
-    font-size: 0.8rem;
-    color: #C89A10;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: background 0.2s, opacity 0.2s;
-  }
-  #voice-toggle:hover { background: #FFF0B0; opacity: 1; }
-  #voice-toggle.muted { opacity: 0.4; }
+/* ── 音声ボタン（共通） ── */
+#voice-toggle {
+  background: none;
+  border: 1.5px solid #E6B800;
+  border-radius: 999px;
+  padding: 0.3rem 1rem;
+  font-family: 'Zen Maru Gothic', sans-serif;
+  font-size: 0.8rem;
+  color: #C89A10;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: background 0.2s, opacity 0.2s;
+}
+#voice-toggle:hover { background: #FFF0B0; opacity: 1; }
+#voice-toggle.muted { opacity: 0.4; }
 </style>
 </head>
 <body>
 
 <div id="title">きもちちゃん</div>
+
 <div id="chara-wrap">
   <svg id="chara-svg" viewBox="0 0 116 120" xmlns="http://www.w3.org/2000/svg"></svg>
 </div>
+
 <div id="speech-bubble">はじめまして！なんでも話しかけてね。</div>
 
 <div id="bottom-area">
@@ -194,7 +193,8 @@
 
   <!-- iPhone用：ボタン選択（初期非表示） -->
   <div id="btn-grid" style="display:none;">
-    <button class="mood-btn" data-key="morning">☀️ おはよう<br>こんにちは<br>おやすみ</button>
+    <!-- data-key="greeting" は時間帯で動的に内容が変わる -->
+    <button class="mood-btn" id="btn-greeting" data-key="greeting">☀️ あいさつ</button>
     <button class="mood-btn" data-key="happy">😊 うれしい<br>たのしい<br>わくわく</button>
     <button class="mood-btn" data-key="tired">😔 つかれた<br>さみしい<br>こわい</button>
     <button class="mood-btn" data-key="thanks">🩷 ありがとう<br>すき<br>かわいい</button>
@@ -208,11 +208,27 @@
 <script>
 // ── iOS判定（UA） ──
 const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
-
 if (isIOS) {
   document.getElementById('input-area').style.display = 'none';
   document.getElementById('btn-grid').style.display = 'grid';
-} 
+}
+
+// ── 時間帯判定とあいさつボタン設定 ──
+// 返り値: { icon, label, keyword, timeZone }
+// 朝(5-10時): おはよう / 昼(10-17時): こんにちは / 夜(17-22時): こんばんは / 深夜(22-5時): おやすみ
+function getGreetingConfig() {
+  const hour = new Date().getHours(); // ローカル時刻（日本在住なのでJSTをそのまま使う）
+  if (hour >= 5 && hour < 10)  return { icon: '🌅', label: 'おはよう',    keyword: 'おはよ' };
+  if (hour >= 10 && hour < 17) return { icon: '☀️',  label: 'こんにちは', keyword: 'こんにちは' };
+  if (hour >= 17 && hour < 22) return { icon: '🌆', label: 'こんばんは', keyword: 'こんばんは' };
+  return                               { icon: '🌙', label: 'おやすみ',   keyword: 'おやすみ' };
+}
+
+// ボタンのラベルを初期化（iOSのみ表示されるが、計算自体は常に行う）
+const greetingConfig = getGreetingConfig();
+const greetingBtn = document.getElementById('btn-greeting');
+// innerHTML で改行なし1行表示（あいさつは1語で十分）
+greetingBtn.innerHTML = greetingConfig.icon + '&nbsp;' + greetingConfig.label;
 
 // ── visualViewport（PC Safari / iPhone Safari 両対応） ──
 const charaWrap = document.getElementById('chara-wrap');
@@ -225,15 +241,14 @@ function onViewportResize() {
   const kbHeight = window.innerHeight - vv.height - vv.offsetTop;
   bottomEl.style.bottom = Math.max(0, kbHeight) + 'px';
   if (kbHeight > 100) {
-    charaWrap.style.top = '6%';
+    charaWrap.style.top    = '6%';
     bubbleEl.style.display = 'none';
   } else {
-    charaWrap.style.top = '13%';
+    charaWrap.style.top    = '13%';
     bubbleEl.style.display = '';
-    bubbleEl.style.top = 'calc(13% + 172px)';
+    bubbleEl.style.top     = 'calc(13% + 172px)';
   }
 }
-
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', onViewportResize);
   window.visualViewport.addEventListener('scroll', onViewportResize);
@@ -246,8 +261,8 @@ function speak(text) {
   if (!voiceEnabled) return;
   window.speechSynthesis.cancel();
   const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'ja-JP';
-  utter.rate = 1.0;
+  utter.lang  = 'ja-JP';
+  utter.rate  = 1.0;
   utter.pitch = 1.6;
   window.speechSynthesis.speak(utter);
 }
@@ -342,12 +357,15 @@ const FACES = {
 };
 
 // ── 返答定義 ──
+// こんばんは を morning カテゴリに追加
 const RESPONSES = [
   { keywords: ['疲れ','つかれ','しんど','きつい','だるい','へとへと','くたくた'], emotion: 'troubled', phrases: ['ちょっと休んで…？','お疲れ様…！ゆっくりしてね。','無理しないでね。','そっか…がんばってたんだね。','お茶でも飲んで休もう？','たまには何もしない日もいいよ。','ゆっくり深呼吸してみて。'] },
   { keywords: ['うれし','嬉し','やった','よかっ','さいこう','最高','やったー','ラッキー'], emotion: 'happy', phrases: ['わーい！よかったね！','やったー！！','それは嬉しいね！','わたしまで嬉しくなっちゃった！','すごいすごい！！','いいことあったんだね〜！','やったじゃん！！'] },
   { keywords: ['ありがと','ありがとう','サンキュ','さんきゅ','thanks'], emotion: 'shy', phrases: ['え…そんな…！えへへ。','あ、どういたしまして！','よ、よかったよ…！','そんなこと言われたら照れちゃう…！','うう…なんか嬉しい…。','こちらこそ！','そ、そう…？えへへ。'] },
   { keywords: ['おはよ','おはようございます'], emotion: 'happy', phrases: ['おはよー！今日もいい日にしよ！','おはよう！ゆっくり起きてね。','おはよ〜！よく眠れた？','おはよう！今日も一緒にがんばろ！','おはようございます！いい朝だね。','おはよ！今日もよろしくね！'] },
   { keywords: ['こんにちは','こんにちわ','やあ','ねえ','ねー','はろ','hello','hi'], emotion: 'normal', phrases: ['こんにちは！どうしたの？','やあ！元気？','なあに？','なんでも聞いてね！','どうぞ話しかけて！','こんにちは〜！','なにかあった？'] },
+  // こんばんは を追加
+  { keywords: ['こんばんは','こんばんわ'], emotion: 'normal', phrases: ['こんばんは！今日はどんな一日だった？','こんばんは〜！ゆっくりしてね。','おつかれさまの夜だね！','こんばんは！なにかあった？','今日も一日お疲れ様！','夜もよろしくね！'] },
   { keywords: ['おやすみ','ねる','寝る','おやすみなさい','もう寝'], emotion: 'sleepy', phrases: ['おやすみ…zzz','ゆっくり休んでね…','またね…zzz','おやすみなさい…いい夢見てね。','ゆっくりね…おやすみ…','また明日ね…zzz','ゆっくりおやすみ…。'] },
   { keywords: ['むかつく','イライラ','いらいら','うざ','きらい','ムカつく','ひどい'], emotion: 'angry', phrases: ['わかる！むかつくよね！！','それはひどい…！','もー！なんなの！','ぷんぷん！許せないよそれ！','いっしょに怒ってあげる！！','そういう人いるよね…最悪だ！','それはないよ、ほんとに！'] },
   { keywords: ['わからん','わからない','むずかし','難しい','どうして','なぜ','なんで','意味わからん'], emotion: 'blank', phrases: ['え…わたしも…よくわかんない…','むずかしいねえ…','うーん…？','それはむずかしい問題だ…','いっしょに考えよ…？','なんでだろうね…うーん。','むずかしいよね…。'] },
@@ -361,13 +379,14 @@ const RESPONSES = [
 ];
 
 // ── ボタン→キーワードマッピング ──
+// greeting だけは greetingConfig.keyword を使う（時間帯依存）
 const BTN_KEYWORDS = {
-  morning: 'おはよ',
-  happy:   'うれしい',
-  tired:   'つかれた',
-  thanks:  'ありがとう',
-  angry:   'むかつく',
-  cheer:   'がんばって'
+  greeting: greetingConfig.keyword, // 時間帯に応じて動的に決まる
+  happy:    'うれしい',
+  tired:    'つかれた',
+  thanks:   'ありがとう',
+  angry:    'むかつく',
+  cheer:    'がんばって'
 };
 
 const DEFAULT_RESPONSES = {
@@ -405,13 +424,13 @@ function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 function reply(text) {
   if (!text.trim()) return;
-  const res = getResponse(text);
+  const res    = getResponse(text);
   const phrase = pick(res.phrases);
   setFace(res.emotion);
   bounce();
   bubble.style.opacity = '0';
   setTimeout(() => {
-    bubble.textContent = phrase;
+    bubble.textContent  = phrase;
     bubble.style.opacity = '1';
     speak(phrase);
   }, 200);
