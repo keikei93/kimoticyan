@@ -158,6 +158,52 @@ body {
 }
 #voice-toggle:hover { background: #FFF0B0; opacity: 1; }
 #voice-toggle.muted { opacity: 0.4; }
+
+/* ── 地面＆てくてくエリア ── */
+#walk-area {
+  position: fixed;
+  left: 0; right: 0;
+  /* bottom-areaの高さ分上に配置（JSで調整） */
+  height: 32px;
+  z-index: 15;
+  overflow: hidden;
+  pointer-events: none;
+}
+/* 地面ライン */
+#walk-area::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: #E6B800;
+  opacity: 0.5;
+}
+/* てくてくキャラ本体 */
+#walker {
+  position: absolute;
+  bottom: 2px; /* 地面の上に立つ */
+  left: -40px; /* 画面外から登場 */
+  width: 20px;
+  height: 24px;
+  image-rendering: pixelated;
+  animation: walk-across 8s linear infinite;
+}
+@keyframes walk-across {
+  0%   { left: -40px;              transform: scaleX(1); }
+  /* 画面右端まで歩く（calc使えないのでvwで指定） */
+  48%  { left: calc(100vw + 10px); transform: scaleX(1); }
+  /* 瞬時に右端に現れて左向きに折り返す */
+  49%  { left: calc(100vw + 10px); transform: scaleX(-1); }
+  50%  { left: calc(100vw + 10px); transform: scaleX(-1); }
+  98%  { left: -40px;              transform: scaleX(-1); }
+  99%  { left: -40px;              transform: scaleX(1); }
+  100% { left: -40px;              transform: scaleX(1); }
+}
+/* 足踏みアニメ（上下ぴょこぴょこ） */
+@keyframes leg-step {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-2px); }
+}
 </style>
 </head>
 <body>
@@ -167,6 +213,35 @@ body {
   <svg id="chara-svg" viewBox="0 0 116 120" xmlns="http://www.w3.org/2000/svg"></svg>
 </div>
 <div id="speech-bubble">はじめまして！なんでも話しかけてね。</div>
+
+<div id="walk-area">
+  <!-- ドット絵風きもちちゃん（20×24px SVG） -->
+  <svg id="walker" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg" style="animation: walk-across 8s linear infinite;">
+    <!-- 胴体（丸角四角） -->
+    <rect x="3" y="1" width="14" height="14" rx="4" fill="#FFD966" stroke="#C89A10" stroke-width="1"/>
+    <!-- 目（左） -->
+    <rect x="6" y="5" width="3" height="3" rx="1" fill="#2C2C2A"/>
+    <!-- 目（右） -->
+    <rect x="11" y="5" width="3" height="3" rx="1" fill="#2C2C2A"/>
+    <!-- 白目ハイライト -->
+    <rect x="7" y="5" width="1" height="1" fill="white"/>
+    <rect x="12" y="5" width="1" height="1" fill="white"/>
+    <!-- 口 -->
+    <rect x="7" y="10" width="6" height="1" rx="0.5" fill="#2C2C2A"/>
+    <!-- ほっぺ -->
+    <rect x="4" y="9" width="2" height="1" rx="0.5" fill="#F4A0A0" opacity="0.7"/>
+    <rect x="14" y="9" width="2" height="1" rx="0.5" fill="#F4A0A0" opacity="0.7"/>
+    <!-- 足（左・右、交互に動く） -->
+    <g id="legs">
+      <rect x="6" y="15" width="3" height="5" rx="1" fill="#FFD966" stroke="#C89A10" stroke-width="1">
+        <animateTransform attributeName="transform" type="translate" values="0,0;0,-2;0,0" dur="0.4s" repeatCount="indefinite"/>
+      </rect>
+      <rect x="11" y="15" width="3" height="5" rx="1" fill="#FFD966" stroke="#C89A10" stroke-width="1">
+        <animateTransform attributeName="transform" type="translate" values="0,-2;0,0;0,-2" dur="0.4s" repeatCount="indefinite"/>
+      </rect>
+    </g>
+  </svg>
+</div>
 
 <div id="bottom-area">
   <div id="input-area">
@@ -278,6 +353,14 @@ function rotateBtnLabel(b) {
 const charaWrap = document.getElementById('chara-wrap');
 const bubbleEl  = document.getElementById('speech-bubble');
 const bottomEl  = document.getElementById('bottom-area');
+const walkArea  = document.getElementById('walk-area');
+
+function updateWalkArea() {
+  // bottom-areaの高さを取得してwalk-areaをその上に配置
+  const baHeight = bottomEl.offsetHeight;
+  const baBottom = parseFloat(bottomEl.style.bottom || '0');
+  walkArea.style.bottom = (baHeight + baBottom) + 'px';
+}
 
 function onViewportResize() {
   const vv = window.visualViewport;
@@ -287,11 +370,14 @@ function onViewportResize() {
   if (kbHeight > 100) {
     charaWrap.style.top    = '6%';
     bubbleEl.style.display = 'none';
+    walkArea.style.display = 'none';
   } else {
     charaWrap.style.top    = '13%';
     bubbleEl.style.display = '';
     bubbleEl.style.top     = 'calc(13% + 172px)';
+    walkArea.style.display = '';
   }
+  updateWalkArea();
 }
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', onViewportResize);
@@ -653,6 +739,8 @@ document.querySelectorAll('.mood-btn').forEach(b => {
 });
 
 setFace('normal');
+// 初期位置を設定
+updateWalkArea();
 </script>
 </body>
 </html>
