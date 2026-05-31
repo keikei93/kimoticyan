@@ -647,8 +647,8 @@ document.querySelectorAll('.mood-btn').forEach(b => {
     const curIdx  = parseInt(b.dataset.idx, 10);
     const keyword = cfg.keywordPool[curIdx];
     reply(keyword);
-    // 返答後にラベルを次の語へローテート
-    rotateBtnLabel(b);
+    // 挨拶ボタンは時間帯固定なのでローテートしない
+    if (key !== 'greeting') rotateBtnLabel(b);
   });
 });
 
