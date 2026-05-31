@@ -163,46 +163,91 @@ body {
 #walk-area {
   position: fixed;
   left: 0; right: 0;
-  /* bottom-areaの高さ分上に配置（JSで調整） */
-  height: 32px;
+  height: 36px;
   z-index: 15;
   overflow: hidden;
   pointer-events: none;
+  /* 地面ラインはborder-bottomで画面幅いっぱいに引く */
+  border-bottom: 2px solid rgba(230,184,0,0.5);
 }
-/* 地面ライン */
-#walk-area::after {
-  content: '';
+#walk-area svg {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 2px;
-  background: #E6B800;
-  opacity: 0.5;
+  bottom: 0;
+  left: 0;
+  /* 幅を画面いっぱいに、高さはwalk-areaに合わせる */
+  width: 100vw;
+  height: 100%;
+  overflow: visible;
 }
-/* てくてくキャラ本体 */
-#walker {
-  position: absolute;
-  bottom: 2px; /* 地面の上に立つ */
-  left: -40px; /* 画面外から登場 */
-  width: 20px;
-  height: 24px;
-  image-rendering: pixelated;
-  animation: walk-across 8s linear infinite;
+/* 横移動 */
+.wk-walker { animation: wkStroll 22s linear infinite; }
+@keyframes wkStroll {
+  0%   { transform: translateX(-60px); }
+  40%  { transform: translateX(45vw); }
+  44%  { transform: translateX(47vw); }
+  58%  { transform: translateX(47vw); }
+  100% { transform: translateX(110vw); }
 }
-@keyframes walk-across {
-  0%   { left: -40px;              transform: scaleX(1); }
-  /* 画面右端まで歩く（calc使えないのでvwで指定） */
-  48%  { left: calc(100vw + 10px); transform: scaleX(1); }
-  /* 瞬時に右端に現れて左向きに折り返す */
-  49%  { left: calc(100vw + 10px); transform: scaleX(-1); }
-  50%  { left: calc(100vw + 10px); transform: scaleX(-1); }
-  98%  { left: -40px;              transform: scaleX(-1); }
-  99%  { left: -40px;              transform: scaleX(1); }
-  100% { left: -40px;              transform: scaleX(1); }
+/* 歩き＋こてっ＋停止＋起き上がり 1本で */
+/* transform-origin: 足元横棒の底辺 y=33 */
+.wk-body { animation: wkBodyAll 22s steps(1) infinite; transform-origin: 12px 33px; }
+@keyframes wkBodyAll {
+  0%    { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  3.2%  { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  6.4%  { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  9.6%  { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  12.8% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  16%   { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  19.2% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  22.4% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  25.6% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  28.8% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  32%   { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  35.2% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  38.4% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  39.9% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  /* 急にこてっ */
+  40%   { transform: rotate(90deg); opacity:1; }
+  40.1% { opacity:0; }
+  57%   { opacity:0; }
+  57.1% { transform: rotate(90deg); opacity:1; }
+  58%   { transform: rotate(0deg);  opacity:1; }
+  60%   { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  63.2% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  66.4% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  69.6% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  72.8% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  76%   { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  79.2% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  82.4% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  85.6% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  88.8% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  92%   { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  95.2% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  98.4% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  100%  { transform: rotate(-5deg) translateY(0px);  opacity:1; }
 }
-/* 足踏みアニメ（上下ぴょこぴょこ） */
-@keyframes leg-step {
-  0%,100% { transform: translateY(0); }
-  50%      { transform: translateY(-2px); }
+/* びっくり顔 */
+.wk-bikkuri { animation: wkBikkuri 22s linear infinite; transform-origin: 12px 33px; }
+@keyframes wkBikkuri {
+  0%    { opacity:0; transform: rotate(0deg); }
+  40%   { opacity:0; transform: rotate(0deg); }
+  40.1% { opacity:1; transform: rotate(90deg); }
+  42%   { opacity:1; transform: rotate(86deg); }
+  44%   { opacity:1; transform: rotate(90deg); }
+  57%   { opacity:1; transform: rotate(90deg); }
+  57.1% { opacity:0; }
+  100%  { opacity:0; }
+}
+/* ！マーク */
+.wk-exclaim { animation: wkExclaim 22s linear infinite; }
+@keyframes wkExclaim {
+  0%    { opacity:0; }
+  40.5% { opacity:0; }
+  41%   { opacity:1; }
+  56%   { opacity:1; }
+  57%   { opacity:0; }
+  100%  { opacity:0; }
 }
 </style>
 </head>
@@ -215,30 +260,38 @@ body {
 <div id="speech-bubble">はじめまして！なんでも話しかけてね。</div>
 
 <div id="walk-area">
-  <!-- ドット絵風きもちちゃん（20×24px SVG） -->
-  <svg id="walker" viewBox="0 0 20 24" xmlns="http://www.w3.org/2000/svg" style="animation: walk-across 8s linear infinite;">
-    <!-- 胴体（丸角四角） -->
-    <rect x="3" y="1" width="14" height="14" rx="4" fill="#FFD966" stroke="#C89A10" stroke-width="1"/>
-    <!-- 目（左） -->
-    <rect x="6" y="5" width="3" height="3" rx="1" fill="#2C2C2A"/>
-    <!-- 目（右） -->
-    <rect x="11" y="5" width="3" height="3" rx="1" fill="#2C2C2A"/>
-    <!-- 白目ハイライト -->
-    <rect x="7" y="5" width="1" height="1" fill="white"/>
-    <rect x="12" y="5" width="1" height="1" fill="white"/>
-    <!-- 口 -->
-    <rect x="7" y="10" width="6" height="1" rx="0.5" fill="#2C2C2A"/>
-    <!-- ほっぺ -->
-    <rect x="4" y="9" width="2" height="1" rx="0.5" fill="#F4A0A0" opacity="0.7"/>
-    <rect x="14" y="9" width="2" height="1" rx="0.5" fill="#F4A0A0" opacity="0.7"/>
-    <!-- 足（左・右、交互に動く） -->
-    <g id="legs">
-      <rect x="6" y="15" width="3" height="5" rx="1" fill="#FFD966" stroke="#C89A10" stroke-width="1">
-        <animateTransform attributeName="transform" type="translate" values="0,0;0,-2;0,0" dur="0.4s" repeatCount="indefinite"/>
-      </rect>
-      <rect x="11" y="15" width="3" height="5" rx="1" fill="#FFD966" stroke="#C89A10" stroke-width="1">
-        <animateTransform attributeName="transform" type="translate" values="0,-2;0,0;0,-2" dur="0.4s" repeatCount="indefinite"/>
-      </rect>
+  <svg viewBox="0 0 1000 36" preserveAspectRatio="xMinYMax slice" xmlns="http://www.w3.org/2000/svg" style="position:absolute;bottom:0;left:0;width:100%;height:100%;">
+    <!-- 地面ライン：viewBox幅いっぱいに引く -->
+    <line x1="0" y1="33" x2="1000" y2="33" stroke="#E6B800" stroke-width="2" opacity="0.5"/>
+    <g class="wk-walker">
+      <!-- 通常歩き -->
+      <g class="wk-body">
+        <rect x="1" y="8" width="22" height="20" rx="4" fill="#FFD966"/>
+        <circle cx="6"  cy="21" r="2.5" fill="#2C2C2A"/>
+        <circle cx="18" cy="21" r="2.5" fill="#2C2C2A"/>
+        <!-- 足横棒bottom = y28+h3 = 31... +2でy=30, h=3 → bottom y=33 地面ぴったり -->
+        <rect x="6"  y="28" width="2" height="3" fill="#FFD966"/>
+        <rect x="3"  y="30" width="8" height="3" fill="#FFD966"/>
+        <rect x="16" y="28" width="2" height="3" fill="#FFD966"/>
+        <rect x="13" y="30" width="8" height="3" fill="#FFD966"/>
+      </g>
+      <!-- びっくり顔 -->
+      <g class="wk-bikkuri">
+        <rect x="1" y="8" width="22" height="20" rx="4" fill="#FFD966"/>
+        <circle cx="6"  cy="19" r="4"   fill="white"/>
+        <circle cx="18" cy="19" r="4"   fill="white"/>
+        <circle cx="6"  cy="19" r="1.5" fill="#2C2C2A"/>
+        <circle cx="18" cy="19" r="1.5" fill="#2C2C2A"/>
+        <rect x="6"  y="28" width="2" height="3" fill="#FFD966"/>
+        <rect x="3"  y="30" width="8" height="3" fill="#FFD966"/>
+        <rect x="16" y="28" width="2" height="3" fill="#FFD966"/>
+        <rect x="13" y="30" width="8" height="3" fill="#FFD966"/>
+      </g>
+      <!-- ！マーク -->
+      <g class="wk-exclaim">
+        <rect x="9" y="0" width="4" height="6" rx="1" fill="#E24B4A"/>
+        <circle cx="11" cy="9" r="2" fill="#E24B4A"/>
+      </g>
     </g>
   </svg>
 </div>
