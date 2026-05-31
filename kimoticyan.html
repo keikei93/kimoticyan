@@ -135,7 +135,7 @@ body {
   border-radius: 12px;
   background: white;
   font-family: 'Zen Maru Gothic', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   color: #3a3a2a;
   cursor: pointer;
   text-align: center;
@@ -174,12 +174,13 @@ body {
     <button id="send-btn">➤</button>
   </div>
   <div id="btn-grid" style="display:none;">
-    <button class="mood-btn" id="btn-greeting" data-key="greeting">☀️ あいさつ</button>
-    <button class="mood-btn" data-key="happy">😊 うれしい<br>たのしい<br>わくわく</button>
-    <button class="mood-btn" data-key="tired">😔 つかれた<br>さみしい<br>こわい</button>
-    <button class="mood-btn" data-key="thanks">🩷 ありがとう<br>すき<br>かわいい</button>
-    <button class="mood-btn" data-key="angry">😤 むかつく<br>やばい<br>わからない</button>
-    <button class="mood-btn" data-key="cheer">💪 がんばって<br>おなかすいた</button>
+    <!-- ラベルはJSで初期設定・押すたびに入れ替わる -->
+    <button class="mood-btn" data-key="greeting"></button>
+    <button class="mood-btn" data-key="happy"></button>
+    <button class="mood-btn" data-key="tired"></button>
+    <button class="mood-btn" data-key="thanks"></button>
+    <button class="mood-btn" data-key="angry"></button>
+    <button class="mood-btn" data-key="scared"></button>
   </div>
   <button id="voice-toggle">🔊 音声オン</button>
 </div>
@@ -195,14 +196,83 @@ if (isIOS) {
 // ── 時間帯判定 ──
 function getGreetingConfig() {
   const hour = new Date().getHours();
-  if (hour >= 5  && hour < 10) return { icon: '🌅', label: 'おはよう',    keyword: 'おはよ' };
-  if (hour >= 10 && hour < 17) return { icon: '☀️',  label: 'こんにちは', keyword: 'こんにちは' };
-  if (hour >= 17 && hour < 22) return { icon: '🌆', label: 'こんばんは', keyword: 'こんばんは' };
-  return                               { icon: '🌙', label: 'おやすみ',   keyword: 'おやすみ' };
+  if (hour >= 5  && hour < 10) return { label: 'おはよう',    keyword: 'おはよ' };
+  if (hour >= 10 && hour < 17) return { label: 'こんにちは',  keyword: 'こんにちは' };
+  if (hour >= 17 && hour < 22) return { label: 'こんばんは',  keyword: 'こんばんは' };
+  return                               { label: 'おやすみ',    keyword: 'おやすみ' };
 }
 const greetingConfig = getGreetingConfig();
-const greetingBtn = document.getElementById('btn-greeting');
-greetingBtn.innerHTML = greetingConfig.icon + '&nbsp;' + greetingConfig.label;
+
+// ── ボタン定義：各ボタンのラベル候補とキーワード候補 ──
+// labelPool: 押すたびにランダムで1語表示
+// keywordPool: そのラベルに対応するキーワード（同じ順番）
+// labelPool と keywordPool は同じ長さ・同じ順で対応させる
+const BTN_CONFIG = {
+  greeting: {
+    // あいさつだけは時間帯で最初のラベルを固定、残りをローテ
+    labelPool:   ['おはよう', 'こんにちは', 'こんばんは', 'おやすみ'],
+    keywordPool: ['おはよ',   'こんにちは', 'こんばんは', 'おやすみ'],
+    // 時間帯に合わせた初期インデックス
+    initLabel: greetingConfig.label,
+    initKeyword: greetingConfig.keyword,
+  },
+  happy: {
+    labelPool:   ['うれしい', 'たのしい', 'わくわく', 'さいこう', 'やった'],
+    keywordPool: ['うれしい', 'たのしい', 'わくわく', '最高',     'やった'],
+  },
+  tired: {
+    labelPool:   ['つかれた', 'しんどい', 'だるい', 'へとへと'],
+    keywordPool: ['つかれた', 'しんどい', 'だるい', 'へとへと'],
+  },
+  thanks: {
+    labelPool:   ['ありがとう', 'すき', 'かわいい', 'だいすき'],
+    keywordPool: ['ありがとう', 'すき', 'かわいい', 'だいすき'],
+  },
+  angry: {
+    labelPool:   ['むかつく', 'いらいら', 'やばい', 'わからない', 'さみしい'],
+    keywordPool: ['むかつく', 'いらいら', 'やばい', 'わからない', 'さみしい'],
+  },
+  scared: {
+    labelPool:   ['こわい', 'びっくり', 'おどろいた', 'やばい'],
+    keywordPool: ['こわい', 'びっくり',  'おどろ',    'やばい'],
+  },
+};
+
+// ── ボタン初期ラベルを設定 ──
+// 各ボタンに現在の表示インデックスを持たせる
+const btnEls = {};
+document.querySelectorAll('.mood-btn').forEach(b => {
+  const key = b.dataset.key;
+  const cfg = BTN_CONFIG[key];
+  btnEls[key] = b;
+
+  if (key === 'greeting') {
+    // 時間帯に合わせた語を初期表示
+    b.textContent = cfg.initLabel;
+    // インデックスは labelPool 内の位置を探す
+    const idx = cfg.labelPool.indexOf(cfg.initLabel);
+    b.dataset.idx = idx >= 0 ? idx : 0;
+  } else {
+    b.dataset.idx = 0;
+    b.textContent = cfg.labelPool[0];
+  }
+});
+
+// ── ラベルを次の語に更新（押した後に呼ぶ） ──
+function rotateBtnLabel(b) {
+  const key = b.dataset.key;
+  const cfg = BTN_CONFIG[key];
+  const pool = cfg.labelPool;
+  // 現在と違う語をランダムで選ぶ（同じ語が連続しないように）
+  let nextIdx;
+  const curIdx = parseInt(b.dataset.idx, 10);
+  if (pool.length === 1) return; // 1語しかない場合は変えない
+  do {
+    nextIdx = Math.floor(Math.random() * pool.length);
+  } while (nextIdx === curIdx);
+  b.dataset.idx = nextIdx;
+  b.textContent = pool[nextIdx];
+}
 
 // ── visualViewport ──
 const charaWrap = document.getElementById('chara-wrap');
@@ -229,15 +299,12 @@ if (window.visualViewport) {
 }
 
 // ── 音声設定 ──
-// 修正①: cancel()後50ms待ってからspeak()することで先頭途切れを防ぐ
-// 修正②: iOS初回タップ時に無音utteranceでエンジンをウォームアップ
 let voiceEnabled = true;
 let speechReady  = false;
 
 function speak(text) {
   if (!voiceEnabled) return;
   window.speechSynthesis.cancel();
-  // cancel直後にspeakすると先頭が切れるため50ms待つ
   setTimeout(() => {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang  = 'ja-JP';
@@ -248,8 +315,6 @@ function speak(text) {
 }
 
 function warmUpSpeech() {
-  // iOS WebSpeech APIはユーザー操作後に初回発声しないとエンジンが起動せず
-  // 最初の発声の冒頭が必ず切れる。無音utteranceを先に走らせて回避する。
   if (speechReady) return;
   speechReady = true;
   const warmUp = new SpeechSynthesisUtterance('');
@@ -353,7 +418,7 @@ const FACES = {
   `; }}
 };
 
-// ── 返答定義（各カテゴリ14フレーズ）──
+// ── 返答定義 ──
 const RESPONSES = [
   { keywords: ['疲れ','つかれ','しんど','きつい','だるい','へとへと','くたくた'],
     emotion: 'troubled',
@@ -517,15 +582,6 @@ const RESPONSES = [
   }
 ];
 
-const BTN_KEYWORDS = {
-  greeting: greetingConfig.keyword,
-  happy:    'うれしい',
-  tired:    'つかれた',
-  thanks:   'ありがとう',
-  angry:    'むかつく',
-  cheer:    'がんばって'
-};
-
 const DEFAULT_RESPONSES = {
   emotion: 'normal',
   phrases: [
@@ -578,13 +634,21 @@ function reply(text) {
   }, 200);
 }
 
+// PC：テキスト入力
 btn.addEventListener('click', () => { reply(input.value); input.value = ''; input.focus(); });
 input.addEventListener('keydown', e => { if (e.key === 'Enter') { reply(input.value); input.value = ''; } });
 
+// iPhone：ボタン選択
 document.querySelectorAll('.mood-btn').forEach(b => {
   b.addEventListener('click', () => {
-    const keyword = BTN_KEYWORDS[b.dataset.key] || '';
+    const key = b.dataset.key;
+    const cfg = BTN_CONFIG[key];
+    // 現在表示中のラベルに対応するキーワードを送信
+    const curIdx  = parseInt(b.dataset.idx, 10);
+    const keyword = cfg.keywordPool[curIdx];
     reply(keyword);
+    // 返答後にラベルを次の語へローテート
+    rotateBtnLabel(b);
   });
 });
 
