@@ -163,34 +163,33 @@ body {
 #walk-area {
   position: fixed;
   left: 0; right: 0;
-  height: 36px;
+  height: 70px;
   z-index: 15;
   overflow: hidden;
   pointer-events: none;
-  /* 地面ラインはborder-bottomで画面幅いっぱいに引く */
   border-bottom: 2px solid rgba(230,184,0,0.5);
 }
 #walk-area svg {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  /* 幅を画面いっぱいに、高さはwalk-areaに合わせる */
-  width: 100vw;
-  height: 100%;
+  bottom: 0; left: 0;
+  width: 100%; height: 100%;
   overflow: visible;
 }
-/* 横移動 */
 .wk-walker { animation: wkStroll 22s linear infinite; }
 @keyframes wkStroll {
   0%   { transform: translateX(-60px); }
-  40%  { transform: translateX(45vw); }
-  44%  { transform: translateX(47vw); }
-  58%  { transform: translateX(47vw); }
-  100% { transform: translateX(110vw); }
+  40%  { transform: translateX(301px); }
+  44%  { transform: translateX(310px); }
+  58%  { transform: translateX(310px); }
+  82%  { transform: translateX(calc(100vw + 20px)); }
+  83%  { transform: translateX(calc(100vw + 30px)); }
+  85%  { transform: translateX(calc(100vw - 11px)); }
+  88%  { transform: translateX(calc(100vw - 11px)); }
+  90%  { transform: translateX(calc(100vw + 30px)); }
+  100% { transform: translateX(calc(100vw + 30px)); }
 }
-/* 歩き＋こてっ＋停止＋起き上がり 1本で */
-/* transform-origin: 足元横棒の底辺 y=33 */
-.wk-body { animation: wkBodyAll 22s steps(1) infinite; transform-origin: 12px 33px; }
+/* 回転軸：右端x=23・足底y=66 */
+.wk-body { animation: wkBodyAll 22s steps(1) infinite; transform-origin: 23px 66px; }
 @keyframes wkBodyAll {
   0%    { transform: rotate(-5deg) translateY(0px);  opacity:1; }
   3.2%  { transform: rotate(5deg)  translateY(-2px); opacity:1; }
@@ -206,7 +205,6 @@ body {
   35.2% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
   38.4% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
   39.9% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
-  /* 急にこてっ */
   40%   { transform: rotate(90deg); opacity:1; }
   40.1% { opacity:0; }
   57%   { opacity:0; }
@@ -219,19 +217,14 @@ body {
   72.8% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
   76%   { transform: rotate(5deg)  translateY(-2px); opacity:1; }
   79.2% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
-  82.4% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
-  85.6% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
-  88.8% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
-  92%   { transform: rotate(-5deg) translateY(0px);  opacity:1; }
-  95.2% { transform: rotate(5deg)  translateY(-2px); opacity:1; }
-  98.4% { transform: rotate(-5deg) translateY(0px);  opacity:1; }
-  100%  { transform: rotate(-5deg) translateY(0px);  opacity:1; }
+  81%   { transform: rotate(5deg)  translateY(-2px); opacity:1; }
+  82%   { transform: rotate(0deg)  translateY(0px);  opacity:1; }
+  100%  { transform: rotate(0deg)  translateY(0px);  opacity:1; }
 }
-/* びっくり顔 */
-.wk-bikkuri { animation: wkBikkuri 22s linear infinite; transform-origin: 12px 33px; }
+.wk-bikkuri { animation: wkBikkuri 22s linear infinite; transform-origin: 23px 66px; }
 @keyframes wkBikkuri {
   0%    { opacity:0; transform: rotate(0deg); }
-  40%   { opacity:0; transform: rotate(0deg); }
+  40%   { opacity:0; }
   40.1% { opacity:1; transform: rotate(90deg); }
   42%   { opacity:1; transform: rotate(86deg); }
   44%   { opacity:1; transform: rotate(90deg); }
@@ -239,7 +232,6 @@ body {
   57.1% { opacity:0; }
   100%  { opacity:0; }
 }
-/* ！マーク */
 .wk-exclaim { animation: wkExclaim 22s linear infinite; }
 @keyframes wkExclaim {
   0%    { opacity:0; }
@@ -247,6 +239,15 @@ body {
   41%   { opacity:1; }
   56%   { opacity:1; }
   57%   { opacity:0; }
+  100%  { opacity:0; }
+}
+.wk-ellipsis { animation: wkEllipsis 22s linear infinite; }
+@keyframes wkEllipsis {
+  0%    { opacity:0; }
+  85%   { opacity:0; }
+  85.5% { opacity:1; }
+  88%   { opacity:1; }
+  88.5% { opacity:0; }
   100%  { opacity:0; }
 }
 </style>
@@ -260,37 +261,44 @@ body {
 <div id="speech-bubble">はじめまして！なんでも話しかけてね。</div>
 
 <div id="walk-area">
-  <svg viewBox="0 0 1000 36" preserveAspectRatio="xMinYMax slice" xmlns="http://www.w3.org/2000/svg" style="position:absolute;bottom:0;left:0;width:100%;height:100%;">
-    <!-- 地面ライン：viewBox幅いっぱいに引く -->
-    <line x1="0" y1="33" x2="1000" y2="33" stroke="#E6B800" stroke-width="2" opacity="0.5"/>
+  <svg viewBox="0 0 680 70" preserveAspectRatio="xMinYMax slice"
+       xmlns="http://www.w3.org/2000/svg"
+       style="position:absolute;bottom:0;left:0;width:100%;height:100%;overflow:visible;">
+    <!-- 地面ライン -->
+    <line x1="-100" y1="68" x2="2000" y2="68" stroke="#E6B800" stroke-width="2" opacity="0.5"/>
     <g class="wk-walker">
       <!-- 通常歩き -->
       <g class="wk-body">
-        <rect x="1" y="8" width="22" height="20" rx="4" fill="#FFD966"/>
-        <circle cx="6"  cy="21" r="2.5" fill="#2C2C2A"/>
-        <circle cx="18" cy="21" r="2.5" fill="#2C2C2A"/>
-        <!-- 足横棒bottom = y28+h3 = 31... +2でy=30, h=3 → bottom y=33 地面ぴったり -->
-        <rect x="6"  y="28" width="2" height="3" fill="#FFD966"/>
-        <rect x="3"  y="30" width="8" height="3" fill="#FFD966"/>
-        <rect x="16" y="28" width="2" height="3" fill="#FFD966"/>
-        <rect x="13" y="30" width="8" height="3" fill="#FFD966"/>
+        <rect x="1" y="42" width="22" height="20" rx="4" fill="#FFD966"/>
+        <circle cx="6"  cy="55" r="2.5" fill="#2C2C2A"/>
+        <circle cx="18" cy="55" r="2.5" fill="#2C2C2A"/>
+        <rect x="6"  y="62" width="2" height="3" fill="#FFD966"/>
+        <rect x="3"  y="64" width="8" height="2" fill="#FFD966"/>
+        <rect x="16" y="62" width="2" height="3" fill="#FFD966"/>
+        <rect x="13" y="64" width="8" height="2" fill="#FFD966"/>
       </g>
       <!-- びっくり顔 -->
       <g class="wk-bikkuri">
-        <rect x="1" y="8" width="22" height="20" rx="4" fill="#FFD966"/>
-        <circle cx="6"  cy="19" r="4"   fill="white"/>
-        <circle cx="18" cy="19" r="4"   fill="white"/>
-        <circle cx="6"  cy="19" r="1.5" fill="#2C2C2A"/>
-        <circle cx="18" cy="19" r="1.5" fill="#2C2C2A"/>
-        <rect x="6"  y="28" width="2" height="3" fill="#FFD966"/>
-        <rect x="3"  y="30" width="8" height="3" fill="#FFD966"/>
-        <rect x="16" y="28" width="2" height="3" fill="#FFD966"/>
-        <rect x="13" y="30" width="8" height="3" fill="#FFD966"/>
+        <rect x="1" y="42" width="22" height="20" rx="4" fill="#FFD966"/>
+        <circle cx="6"  cy="53" r="4"   fill="white"/>
+        <circle cx="18" cy="53" r="4"   fill="white"/>
+        <circle cx="6"  cy="53" r="1.5" fill="#2C2C2A"/>
+        <circle cx="18" cy="53" r="1.5" fill="#2C2C2A"/>
+        <rect x="6"  y="62" width="2" height="3" fill="#FFD966"/>
+        <rect x="3"  y="64" width="8" height="2" fill="#FFD966"/>
+        <rect x="16" y="62" width="2" height="3" fill="#FFD966"/>
+        <rect x="13" y="64" width="8" height="2" fill="#FFD966"/>
       </g>
       <!-- ！マーク -->
       <g class="wk-exclaim">
-        <rect x="9" y="0" width="4" height="6" rx="1" fill="#E24B4A"/>
-        <circle cx="11" cy="9" r="2" fill="#E24B4A"/>
+        <rect x="9" y="28" width="4" height="9" rx="1" fill="#E24B4A"/>
+        <circle cx="11" cy="41" r="2" fill="#E24B4A"/>
+      </g>
+      <!-- 覗き時の「…」 -->
+      <g class="wk-ellipsis">
+        <circle cx="2"  cy="36" r="2" fill="#C89A10"/>
+        <circle cx="9"  cy="36" r="2" fill="#C89A10"/>
+        <circle cx="16" cy="36" r="2" fill="#C89A10"/>
       </g>
     </g>
   </svg>
