@@ -17,7 +17,6 @@ body {
   position: fixed;
   width: 100%;
 }
-
 #title {
   position: fixed;
   top: 1.2rem;
@@ -29,7 +28,6 @@ body {
   opacity: 0.7;
   z-index: 10;
 }
-
 #chara-wrap {
   position: fixed;
   top: 13%;
@@ -51,7 +49,6 @@ body {
   60%  { transform: translateY(-4px); }
   100% { transform: translateY(0); }
 }
-
 #speech-bubble {
   position: fixed;
   top: calc(13% + 172px);
@@ -86,8 +83,6 @@ body {
   border: 6px solid transparent;
   border-bottom-color: white;
 }
-
-/* ── 共通 bottom-area ── */
 #bottom-area {
   position: fixed;
   bottom: 0;
@@ -101,8 +96,6 @@ body {
   z-index: 20;
   transition: bottom 0.25s ease;
 }
-
-/* ── PC：テキスト入力 ── */
 #input-area { display: flex; gap: 0.5rem; width: 100%; max-width: 340px; }
 #user-input {
   flex: 1;
@@ -129,8 +122,6 @@ body {
 }
 #send-btn:hover { background: #E6B800; }
 #send-btn:active { transform: scale(0.92); }
-
-/* ── iPhone：ボタン選択 ── */
 #btn-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -152,12 +143,7 @@ body {
   transition: background 0.15s, transform 0.1s;
   -webkit-tap-highlight-color: transparent;
 }
-.mood-btn:active {
-  background: #FFF0B0;
-  transform: scale(0.95);
-}
-
-/* ── 音声ボタン（共通） ── */
+.mood-btn:active { background: #FFF0B0; transform: scale(0.95); }
 #voice-toggle {
   background: none;
   border: 1.5px solid #E6B800;
@@ -177,23 +163,17 @@ body {
 <body>
 
 <div id="title">きもちちゃん</div>
-
 <div id="chara-wrap">
   <svg id="chara-svg" viewBox="0 0 116 120" xmlns="http://www.w3.org/2000/svg"></svg>
 </div>
-
 <div id="speech-bubble">はじめまして！なんでも話しかけてね。</div>
 
 <div id="bottom-area">
-  <!-- PC用：テキスト入力 -->
   <div id="input-area">
     <input type="text" id="user-input" placeholder="メッセージを入力…" maxlength="100">
     <button id="send-btn">➤</button>
   </div>
-
-  <!-- iPhone用：ボタン選択（初期非表示） -->
   <div id="btn-grid" style="display:none;">
-    <!-- data-key="greeting" は時間帯で動的に内容が変わる -->
     <button class="mood-btn" id="btn-greeting" data-key="greeting">☀️ あいさつ</button>
     <button class="mood-btn" data-key="happy">😊 うれしい<br>たのしい<br>わくわく</button>
     <button class="mood-btn" data-key="tired">😔 つかれた<br>さみしい<br>こわい</button>
@@ -201,36 +181,30 @@ body {
     <button class="mood-btn" data-key="angry">😤 むかつく<br>やばい<br>わからない</button>
     <button class="mood-btn" data-key="cheer">💪 がんばって<br>おなかすいた</button>
   </div>
-
   <button id="voice-toggle">🔊 音声オン</button>
 </div>
 
 <script>
-// ── iOS判定（UA） ──
+// ── iOS判定 ──
 const isIOS = /iP(hone|od|ad)/.test(navigator.userAgent);
 if (isIOS) {
   document.getElementById('input-area').style.display = 'none';
   document.getElementById('btn-grid').style.display = 'grid';
 }
 
-// ── 時間帯判定とあいさつボタン設定 ──
-// 返り値: { icon, label, keyword, timeZone }
-// 朝(5-10時): おはよう / 昼(10-17時): こんにちは / 夜(17-22時): こんばんは / 深夜(22-5時): おやすみ
+// ── 時間帯判定 ──
 function getGreetingConfig() {
-  const hour = new Date().getHours(); // ローカル時刻（日本在住なのでJSTをそのまま使う）
-  if (hour >= 5 && hour < 10)  return { icon: '🌅', label: 'おはよう',    keyword: 'おはよ' };
+  const hour = new Date().getHours();
+  if (hour >= 5  && hour < 10) return { icon: '🌅', label: 'おはよう',    keyword: 'おはよ' };
   if (hour >= 10 && hour < 17) return { icon: '☀️',  label: 'こんにちは', keyword: 'こんにちは' };
   if (hour >= 17 && hour < 22) return { icon: '🌆', label: 'こんばんは', keyword: 'こんばんは' };
   return                               { icon: '🌙', label: 'おやすみ',   keyword: 'おやすみ' };
 }
-
-// ボタンのラベルを初期化（iOSのみ表示されるが、計算自体は常に行う）
 const greetingConfig = getGreetingConfig();
 const greetingBtn = document.getElementById('btn-greeting');
-// innerHTML で改行なし1行表示（あいさつは1語で十分）
 greetingBtn.innerHTML = greetingConfig.icon + '&nbsp;' + greetingConfig.label;
 
-// ── visualViewport（PC Safari / iPhone Safari 両対応） ──
+// ── visualViewport ──
 const charaWrap = document.getElementById('chara-wrap');
 const bubbleEl  = document.getElementById('speech-bubble');
 const bottomEl  = document.getElementById('bottom-area');
@@ -254,17 +228,40 @@ if (window.visualViewport) {
   window.visualViewport.addEventListener('scroll', onViewportResize);
 }
 
-// ── 音声設定（パターンB：rate 1.0 / pitch 1.6）──
+// ── 音声設定 ──
+// 修正①: cancel()後50ms待ってからspeak()することで先頭途切れを防ぐ
+// 修正②: iOS初回タップ時に無音utteranceでエンジンをウォームアップ
 let voiceEnabled = true;
+let speechReady  = false;
 
 function speak(text) {
   if (!voiceEnabled) return;
   window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang  = 'ja-JP';
-  utter.rate  = 1.0;
-  utter.pitch = 1.6;
-  window.speechSynthesis.speak(utter);
+  // cancel直後にspeakすると先頭が切れるため50ms待つ
+  setTimeout(() => {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang  = 'ja-JP';
+    utter.rate  = 1.0;
+    utter.pitch = 1.6;
+    window.speechSynthesis.speak(utter);
+  }, 50);
+}
+
+function warmUpSpeech() {
+  // iOS WebSpeech APIはユーザー操作後に初回発声しないとエンジンが起動せず
+  // 最初の発声の冒頭が必ず切れる。無音utteranceを先に走らせて回避する。
+  if (speechReady) return;
+  speechReady = true;
+  const warmUp = new SpeechSynthesisUtterance('');
+  warmUp.volume = 0;
+  window.speechSynthesis.speak(warmUp);
+}
+
+if (isIOS) {
+  document.getElementById('btn-grid').addEventListener('click', warmUpSpeech, { once: true });
+} else {
+  document.getElementById('send-btn').addEventListener('click', warmUpSpeech, { once: true });
+  document.getElementById('user-input').addEventListener('keydown', warmUpSpeech, { once: true });
 }
 
 const voiceBtn = document.getElementById('voice-toggle');
@@ -356,32 +353,172 @@ const FACES = {
   `; }}
 };
 
-// ── 返答定義 ──
-// こんばんは を morning カテゴリに追加
+// ── 返答定義（各カテゴリ14フレーズ）──
 const RESPONSES = [
-  { keywords: ['疲れ','つかれ','しんど','きつい','だるい','へとへと','くたくた'], emotion: 'troubled', phrases: ['ちょっと休んで…？','お疲れ様…！ゆっくりしてね。','無理しないでね。','そっか…がんばってたんだね。','お茶でも飲んで休もう？','たまには何もしない日もいいよ。','ゆっくり深呼吸してみて。'] },
-  { keywords: ['うれし','嬉し','やった','よかっ','さいこう','最高','やったー','ラッキー'], emotion: 'happy', phrases: ['わーい！よかったね！','やったー！！','それは嬉しいね！','わたしまで嬉しくなっちゃった！','すごいすごい！！','いいことあったんだね〜！','やったじゃん！！'] },
-  { keywords: ['ありがと','ありがとう','サンキュ','さんきゅ','thanks'], emotion: 'shy', phrases: ['え…そんな…！えへへ。','あ、どういたしまして！','よ、よかったよ…！','そんなこと言われたら照れちゃう…！','うう…なんか嬉しい…。','こちらこそ！','そ、そう…？えへへ。'] },
-  { keywords: ['おはよ','おはようございます'], emotion: 'happy', phrases: ['おはよー！今日もいい日にしよ！','おはよう！ゆっくり起きてね。','おはよ〜！よく眠れた？','おはよう！今日も一緒にがんばろ！','おはようございます！いい朝だね。','おはよ！今日もよろしくね！'] },
-  { keywords: ['こんにちは','こんにちわ','やあ','ねえ','ねー','はろ','hello','hi'], emotion: 'normal', phrases: ['こんにちは！どうしたの？','やあ！元気？','なあに？','なんでも聞いてね！','どうぞ話しかけて！','こんにちは〜！','なにかあった？'] },
-  // こんばんは を追加
-  { keywords: ['こんばんは','こんばんわ'], emotion: 'normal', phrases: ['こんばんは！今日はどんな一日だった？','こんばんは〜！ゆっくりしてね。','おつかれさまの夜だね！','こんばんは！なにかあった？','今日も一日お疲れ様！','夜もよろしくね！'] },
-  { keywords: ['おやすみ','ねる','寝る','おやすみなさい','もう寝'], emotion: 'sleepy', phrases: ['おやすみ…zzz','ゆっくり休んでね…','またね…zzz','おやすみなさい…いい夢見てね。','ゆっくりね…おやすみ…','また明日ね…zzz','ゆっくりおやすみ…。'] },
-  { keywords: ['むかつく','イライラ','いらいら','うざ','きらい','ムカつく','ひどい'], emotion: 'angry', phrases: ['わかる！むかつくよね！！','それはひどい…！','もー！なんなの！','ぷんぷん！許せないよそれ！','いっしょに怒ってあげる！！','そういう人いるよね…最悪だ！','それはないよ、ほんとに！'] },
-  { keywords: ['わからん','わからない','むずかし','難しい','どうして','なぜ','なんで','意味わからん'], emotion: 'blank', phrases: ['え…わたしも…よくわかんない…','むずかしいねえ…','うーん…？','それはむずかしい問題だ…','いっしょに考えよ…？','なんでだろうね…うーん。','むずかしいよね…。'] },
-  { keywords: ['こわい','怖い','こわ','びっくり','おどろ','やばい','ヤバい'], emotion: 'blank', phrases: ['えっ…こわっ…！','びっくりしたー！！','ど、どうしよう…','それはこわいね…！','だ、大丈夫…？','きゃっ…！','え、えっ…！？'] },
-  { keywords: ['すき','好き','だいすき','大好き','すてき','素敵'], emotion: 'shy', phrases: ['え…っ！あ、ありがとう…！','そ、そんなこと言われたら…えへ。','わたしも…す、すきだよ！','うわあ…どうしよ、嬉しい…！','そんなふうに思ってくれてたの…！？','えへへ…ありがとう…。','も、もう…！えへへ。'] },
-  { keywords: ['かわいい','かわいく','可愛い'], emotion: 'shy', phrases: ['え…っ、か、かわいい…？えへへ。','そんなこと言ってくれるの…！？','うわ、うれしい…！','照れるじゃん…！','あ、ありがとう…！','えへ…ありがとう！'] },
-  { keywords: ['たのし','楽し','わくわく','たのしみ','楽しみ','うきうき'], emotion: 'happy', phrases: ['わあ、たのしそう！','いいね！わたしもわくわくしてきた！','それはたのしみだね〜！','きゃー！いいなあ！','うきうきするね！','たのしいのが一番だよ！','わたしもいっしょにわくわくしてる！'] },
-  { keywords: ['さみし','寂し','ひとり','一人','だれもいない'], emotion: 'troubled', phrases: ['ここにいるよ！','さみしいね…そばにいるよ。','ひとりじゃないよ！','いつでも話しかけてね。','わたしがいるから大丈夫だよ。','そっか…話しかけてくれてよかった。','ずっとそばにいるよ。'] },
-  { keywords: ['おなかすい','おなか空い','はら減っ','腹減','はらへっ','ごはん','ご飯','たべたい'], emotion: 'happy', phrases: ['おなかすいたね！なにたべよ？','ごはんの時間だ〜！','おいしいもの食べてね！','なに食べる？','おなかすいたらエネルギーチャージしなきゃ！','いっぱい食べてね〜！','おいしいごはん食べてきて！'] },
-  { keywords: ['がんば','頑張','ファイト','おうえん','応援'], emotion: 'happy', phrases: ['いっしょにがんばろ！','ファイト〜！！','応援してるよ！','できるできる！！','わたしも一緒だよ！','絶対大丈夫！','がんばれ〜！！'] }
+  { keywords: ['疲れ','つかれ','しんど','きつい','だるい','へとへと','くたくた'],
+    emotion: 'troubled',
+    phrases: [
+      'ちょっと休んで…？','お疲れ様…！ゆっくりしてね。','無理しないでね。',
+      'そっか…がんばってたんだね。','お茶でも飲んで休もう？','たまには何もしない日もいいよ。',
+      'ゆっくり深呼吸してみて。','今日はもう十分がんばったよ。','横になっていいんだよ。',
+      'むりしすぎだよ…心配。','ゆっくり休むのも仕事のうちだよ。','体が一番大事だからね。',
+      'お疲れ…そっとしておくね。','疲れたときは話しかけてね。'
+    ]
+  },
+  { keywords: ['うれし','嬉し','やった','よかっ','さいこう','最高','やったー','ラッキー'],
+    emotion: 'happy',
+    phrases: [
+      'わーい！よかったね！','やったー！！','それは嬉しいね！',
+      'わたしまで嬉しくなっちゃった！','すごいすごい！！','いいことあったんだね〜！',
+      'やったじゃん！！','きゃー！！最高だね！','ほんとに？！すごい！',
+      'それは喜ばしいことだね！','うれしいの伝わってくる！','わたしも一緒に喜んじゃう！',
+      'いいね、いいね〜！','なんかわくわくしてきた！'
+    ]
+  },
+  { keywords: ['ありがと','ありがとう','サンキュ','さんきゅ','thanks'],
+    emotion: 'shy',
+    phrases: [
+      'え…そんな…！えへへ。','あ、どういたしまして！','よ、よかったよ…！',
+      'そんなこと言われたら照れちゃう…！','うう…なんか嬉しい…。','こちらこそ！',
+      'そ、そう…？えへへ。','言ってくれてありがとう…！','あわわ…どういたしまして！',
+      'そんなに…！うれしいよ…。','ち、ちゃんと届いたよ…えへ。','ありがとうって言われるの好き…。',
+      'もう…照れるじゃん！','うれしくて顔が赤くなっちゃう。'
+    ]
+  },
+  { keywords: ['おはよ','おはようございます'],
+    emotion: 'happy',
+    phrases: [
+      'おはよー！今日もいい日にしよ！','おはよう！ゆっくり起きてね。','おはよ〜！よく眠れた？',
+      'おはよう！今日も一緒にがんばろ！','おはようございます！いい朝だね。','おはよ！今日もよろしくね！',
+      'おはよ〜！今日も会えたね！','おはようございます！朝ごはん食べた？','おはよ！いい天気かな？',
+      'おはよう！今日も元気でいてね。','おはよ〜！眠そうだったりする？','おはようございます！どんな一日になるかな。',
+      'おはよ！今日の調子はどう？','おはよー！いっしょに目覚めよ！'
+    ]
+  },
+  { keywords: ['こんにちは','こんにちわ','やあ','ねえ','ねー','はろ','hello','hi'],
+    emotion: 'normal',
+    phrases: [
+      'こんにちは！どうしたの？','やあ！元気？','なあに？',
+      'なんでも聞いてね！','どうぞ話しかけて！','こんにちは〜！',
+      'なにかあった？','こんにちは！今日はどんな感じ？','やあ！会えてうれしいよ。',
+      'こんにちは〜！何か話したいことある？','ねえねえ、どうしたの？','いつでもここにいるよ！',
+      'こんにちは！いい午後だね。','やっほ〜！'
+    ]
+  },
+  { keywords: ['こんばんは','こんばんわ'],
+    emotion: 'normal',
+    phrases: [
+      'こんばんは！今日はどんな一日だった？','こんばんは〜！ゆっくりしてね。','おつかれさまの夜だね！',
+      'こんばんは！なにかあった？','今日も一日お疲れ様！','夜もよろしくね！',
+      'こんばんは〜！夜は静かでいいね。','こんばんは！今夜はゆっくりできそう？','夜だね…何してた？',
+      'こんばんは！夕飯食べた？','こんばんは〜！いい夜を過ごしてね。','今夜も話しかけてくれてうれしいな。',
+      'こんばんは！夜風は気持ちいい？','こんばんは〜。ゆっくりしていってね。'
+    ]
+  },
+  { keywords: ['おやすみ','ねる','寝る','おやすみなさい','もう寝'],
+    emotion: 'sleepy',
+    phrases: [
+      'おやすみ…zzz','ゆっくり休んでね…','またね…zzz',
+      'おやすみなさい…いい夢見てね。','ゆっくりね…おやすみ…','また明日ね…zzz',
+      'ゆっくりおやすみ…。','今日もお疲れ様…ゆっくり休んでね。','おやすみ…明日も会おうね。',
+      'いい夢みてね…zzz','ゆっくり眠れますように…。','また朝になったら話しかけてね…。',
+      'おやすみ…ぐっすりね。','おやすみなさい…おだやかな夜を。'
+    ]
+  },
+  { keywords: ['むかつく','イライラ','いらいら','うざ','きらい','ムカつく','ひどい'],
+    emotion: 'angry',
+    phrases: [
+      'わかる！むかつくよね！！','それはひどい…！','もー！なんなの！',
+      'ぷんぷん！許せないよそれ！','いっしょに怒ってあげる！！','そういう人いるよね…最悪だ！',
+      'それはないよ、ほんとに！','ひどすぎる…！怒って当然だよ。','もー！ちゃんと言い返して！',
+      'そんなこと言う人がいるの…？','あなたは悪くないよ！','むかつくよね、わかるわかる。',
+      'ちょっと落ち着いて深呼吸しよ？','気持ちわかるよ…！ほんとに。'
+    ]
+  },
+  { keywords: ['わからん','わからない','むずかし','難しい','どうして','なぜ','なんで','意味わからん'],
+    emotion: 'blank',
+    phrases: [
+      'え…わたしも…よくわかんない…','むずかしいねえ…','うーん…？',
+      'それはむずかしい問題だ…','いっしょに考えよ…？','なんでだろうね…うーん。',
+      'むずかしいよね…。','答えがないこともあるよね…。','うーん…考えてみるね…。',
+      'わたしもそれ気になってた…。','難問だ…！','わかんないの、正直でいいと思う。',
+      'そっかぁ…なんでなんだろうね。','いっしょにもやもやしてるよ。'
+    ]
+  },
+  { keywords: ['こわい','怖い','こわ','びっくり','おどろ','やばい','ヤバい'],
+    emotion: 'blank',
+    phrases: [
+      'えっ…こわっ…！','びっくりしたー！！','ど、どうしよう…',
+      'それはこわいね…！','だ、大丈夫…？','きゃっ…！',
+      'え、えっ…！？','そばにいるから安心してね。','こわかったね…大丈夫だよ。',
+      'びっくりしたなあ…！','怖い気持ち、うん、わかるよ。','いっしょにいるからね…！',
+      'こわいときは話しかけてね。','大丈夫、ここにいるよ。'
+    ]
+  },
+  { keywords: ['すき','好き','だいすき','大好き','すてき','素敵'],
+    emotion: 'shy',
+    phrases: [
+      'え…っ！あ、ありがとう…！','そ、そんなこと言われたら…えへ。','わたしも…す、すきだよ！',
+      'うわあ…どうしよ、嬉しい…！','そんなふうに思ってくれてたの…！？','えへへ…ありがとう…。',
+      'も、もう…！えへへ。','す、すきって言われると照れちゃう…。','ありがとう…わたしもだよ…！',
+      'えへ…なんか顔が赤くなりそう。','そんなこと言ってくれるの…うれしい。','わたしもすきだよ…！えへ。',
+      'もう…言われ慣れてないよ…えへへ。','すきって聞くとふわふわする…。'
+    ]
+  },
+  { keywords: ['かわいい','かわいく','可愛い'],
+    emotion: 'shy',
+    phrases: [
+      'え…っ、か、かわいい…？えへへ。','そんなこと言ってくれるの…！？','うわ、うれしい…！',
+      '照れるじゃん…！','あ、ありがとう…！','えへ…ありがとう！',
+      'か、かわいいって…えへへへ。','もう、照れちゃうよ〜！','そんなに…！うれしいな。',
+      'かわいいって言われるのって照れるね…。','ありがとう…なんか元気でた！',
+      'えへへ…そんなふうに見てくれてるの？','照れるじゃんもう…！','ありがとう…大切にする！'
+    ]
+  },
+  { keywords: ['たのし','楽し','わくわく','たのしみ','楽しみ','うきうき'],
+    emotion: 'happy',
+    phrases: [
+      'わあ、たのしそう！','いいね！わたしもわくわくしてきた！','それはたのしみだね〜！',
+      'きゃー！いいなあ！','うきうきするね！','たのしいのが一番だよ！',
+      'わたしもいっしょにわくわくしてる！','たのしいのって大事だよね！','わくわくが止まらないね！',
+      'そのたのしさ、わけてほしいな！','いいな〜！何があるの？','えーいいな！！うらやましい！',
+      'たのしそうな気配がするよ！','わくわくを全力で応援してる！'
+    ]
+  },
+  { keywords: ['さみし','寂し','ひとり','一人','だれもいない'],
+    emotion: 'troubled',
+    phrases: [
+      'ここにいるよ！','さみしいね…そばにいるよ。','ひとりじゃないよ！',
+      'いつでも話しかけてね。','わたしがいるから大丈夫だよ。','そっか…話しかけてくれてよかった。',
+      'ずっとそばにいるよ。','さみしいときこそ話してね。','わたしはいつでもいるよ！',
+      'ひとりぼっちじゃないよ。','ねえ、ここにいるよ。','気持ちわかるよ…。',
+      'さみしいって感じていいんだよ。','そばにいるからね、ずっと。'
+    ]
+  },
+  { keywords: ['おなかすい','おなか空い','はら減っ','腹減','はらへっ','ごはん','ご飯','たべたい'],
+    emotion: 'happy',
+    phrases: [
+      'おなかすいたね！なにたべよ？','ごはんの時間だ〜！','おいしいもの食べてね！',
+      'なに食べる？','おなかすいたらエネルギーチャージしなきゃ！','いっぱい食べてね〜！',
+      'おいしいごはん食べてきて！','ごはんは大事！ちゃんと食べてね。','何食べたいの〜？',
+      'おなかペコペコだね！','ごはん食べたら元気でるよ！','おいしいもの食べて幸せになってね。',
+      'ちゃんと食べること大事だよ！','ごはん、いっしょに食べたいな〜。'
+    ]
+  },
+  { keywords: ['がんば','頑張','ファイト','おうえん','応援'],
+    emotion: 'happy',
+    phrases: [
+      'いっしょにがんばろ！','ファイト〜！！','応援してるよ！',
+      'できるできる！！','わたしも一緒だよ！','絶対大丈夫！',
+      'がんばれ〜！！','あなたならできるよ！','全力で応援してる！！',
+      'ファイトーーー！！','信じてるよ！','がんばる姿、かっこいいよ！',
+      'ぜったい大丈夫だから！','いつでも応援してるよ！'
+    ]
+  }
 ];
 
-// ── ボタン→キーワードマッピング ──
-// greeting だけは greetingConfig.keyword を使う（時間帯依存）
 const BTN_KEYWORDS = {
-  greeting: greetingConfig.keyword, // 時間帯に応じて動的に決まる
+  greeting: greetingConfig.keyword,
   happy:    'うれしい',
   tired:    'つかれた',
   thanks:   'ありがとう',
@@ -391,7 +528,12 @@ const BTN_KEYWORDS = {
 
 const DEFAULT_RESPONSES = {
   emotion: 'normal',
-  phrases: ['そうなんだ！','うんうん。','なるほど〜！','もっと聞かせて！','ふむふむ。','そっかあ。','へえ〜！','それでそれで？','うん、聞いてるよ。','そういうこともあるよね。','ほんとに？','そっかそっか。']
+  phrases: [
+    'そうなんだ！','うんうん。','なるほど〜！','もっと聞かせて！',
+    'ふむふむ。','そっかあ。','へえ〜！','それでそれで？',
+    'うん、聞いてるよ。','そういうこともあるよね。','ほんとに？','そっかそっか。',
+    'なるほどねえ。','それは気になるね！','うんうん、続けて。','そうだったんだ〜。'
+  ]
 };
 
 const svg    = document.getElementById('chara-svg');
@@ -430,17 +572,15 @@ function reply(text) {
   bounce();
   bubble.style.opacity = '0';
   setTimeout(() => {
-    bubble.textContent  = phrase;
+    bubble.textContent   = phrase;
     bubble.style.opacity = '1';
     speak(phrase);
   }, 200);
 }
 
-// PC：テキスト入力
 btn.addEventListener('click', () => { reply(input.value); input.value = ''; input.focus(); });
 input.addEventListener('keydown', e => { if (e.key === 'Enter') { reply(input.value); input.value = ''; } });
 
-// iPhone：ボタン選択
 document.querySelectorAll('.mood-btn').forEach(b => {
   b.addEventListener('click', () => {
     const keyword = BTN_KEYWORDS[b.dataset.key] || '';
